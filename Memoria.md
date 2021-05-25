@@ -1,14 +1,14 @@
 # Memoria Quevedo FEST
 
 ## Introduccion
-
+---
     En este proyecto vamos a crear una pequeña base de datos para un hipotético festival.
 
     Nos centraremos en el apartado de artistas musicales y sus actuaciones.
 
 
 ## Modelo Conceptual
-
+---
     Para ello desarrollaremos una base de datos que incluya datos de los artista, sus grupos, sus fans, sus actuaciones, los asistentes a sus actuaciones asi como el lugar donde se realizan   y los patrocinadores de los grupos
 
 Hemos decidido crear este esquema del modelo entidad relacion:
@@ -55,7 +55,8 @@ Normalizandolos,
 Ahora que hemos normalizado seguiremos las reglas de transformacion para generar las tablas
 
 ## Modelo fisico
-
+---
+Obtendremos del apartado anterior los datos necesarios para crear este diagrama de clases.
 
 ---
 ![CAT](ClassDiagram(3).png)
@@ -329,7 +330,7 @@ Intentaremos conectar directamente con la base de datos si nos sobra tiempo para
 Hemos introducido de esta forma 30.000 datos aproximadamente.
 
 ## Consultas
-
+---
 Con estos datos ya podemos hacer consultas a la base de datos,
 
 Dividiremos esta seccion en pequeñas consultas explicando su funcion en el proyecto y porque consideramos que serian utiles.
@@ -403,7 +404,7 @@ JOIN escenario ON actuacion.escenario = escenario.nombre;
 Podria usarse para poder poner publicidad de ese patrocinador en el escenario en el que toque su grupo.
 
 ## Vistas
-
+---
 Las vistas son utiles usadas para consultas frecuentes, ya que nos ahorran tiempo al hacer estas consultas.
 
 Debido a esto aqui proponemos algunas vistas que consideramos utiles
@@ -415,7 +416,7 @@ CREATE or replace VIEW artistas AS
    JOIN artista ON grupo.id_grupo = artista.grupo ;
 ```
 ## Scripts
-
+---
 hemos generado tambien algunos scripts para hacer algunas funciones.
 
 El primero es un script que sacaria por consola una lista de cada uno de los donantes.
