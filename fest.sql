@@ -1,5 +1,7 @@
 CREATE DATABASE fest;
 
+--Crear tablas
+
 CREATE TABLE estilo
 (nombre VARCHAR CONSTRAINT estilo_pk PRIMARY KEY,
 epoca VARCHAR NOT NULL
@@ -38,7 +40,7 @@ aforo INT
 CREATE TABLE actuacion
 (id_actuacion INT CONSTRAINT actuacion_pk PRIMARY KEY ,
 nombre VARCHAR NOT NULL,
-fecha DATETIME NOT NULL,
+fecha DATE NOT NULL,
 grupo INT,
 escenario VARCHAR,
 
@@ -72,6 +74,7 @@ CONSTRAINT patgrup_patrocinador_fk FOREIGN KEY (patrocinador) REFERENCES patroci
 
 );
 
+--Insert
 
 INSERT INTO grupo (id_grupo, nombre, experiencia)
 VALUES (0, 'asd', '1990-10-12');
@@ -142,7 +145,7 @@ UPDATE actuacion SET fecha = '2021-11-2 20:00:00' WHERE id_actuacion = 1;
 
 UPDATE actuacion SET fecha = '2021-11-1 20:00:00' WHERE id_actuacion = 0;
 
-AL
+--Consultas
 
 SELECT * FROM asistente;
 
@@ -168,6 +171,8 @@ JOIN grupo ON patrocinador_grupo.grupo = grupo.id_grupo
 JOIN actuacion ON grupo.id_grupo = actuacion.grupo
 JOIN escenario ON actuacion.escenario = escenario.nombre;
 
+--Vistas
+
 CREATE or replace VIEW artistas AS 
    SELECT grupo.nombre, artista.nombre FROM grupo 
    JOIN artista ON grupo.id_grupo = artista.grupo ;
@@ -182,6 +187,13 @@ CREATE or replace VIEW calendarioFechas AS
    GROUP BY DATE_PART('day', actuacion.fecha), DATE_PART('month', actuacion.fecha), DATE_PART('year', actuacion.fecha)
    ORDER BY DATE_PART('day', actuacion.fecha);
 
+--Indices
+
+CREATE INDEX numEntrada ON asistente
+
+CREATE INDEX indexNombre ON fan
+
+--Scripts
 
 CREATE or replace FUNCTION donaciones(_grupo integer)
    RETURN text AS $$

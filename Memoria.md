@@ -404,7 +404,7 @@ JOIN escenario ON actuacion.escenario = escenario.nombre;
 Podria usarse para poder poner publicidad de ese patrocinador en el escenario en el que toque su grupo.
 
 ## Vistas
----
+
 Las vistas son utiles usadas para consultas frecuentes, ya que nos ahorran tiempo al escribir estas consultas.
 
 Debido a esto aqui proponemos algunas vistas que consideramos utiles
@@ -415,8 +415,39 @@ CREATE or replace VIEW artistas AS
    SELECT grupo.nombre, artista.nombre FROM grupo 
    JOIN artista ON grupo.id_grupo = artista.grupo ;
 ```
+## Secuncias
+
+Dado que el principal uso de secuencias es la introduccion de datos y nosotros usamos un archivo externo para la creacion de estos, no vemos mucha utilidad en crear secuencias.
+
+Aun asi, a modo de ejemplo creamos una,
+
+```SQL
+
+```
+
+## Indices
+
+Los indices son utiles para consultas habituales sobre tablas con muchos datos. Aun que no es conveninte usarlos sobre tablas que tengan muchos cambios en sus datos habitualmente.
+
+Hemos decidido hacer un indice para las siguientes columnas de las siguientes tablasn
+
+    numEntrada de asistente
+
+    nombre de fan
+
+Hemos elegido estas dos tablas y estas dos columnas porque ambas son tablas con muchos datos y columnas que se consultan bastante. Dado que nuestros datos son estaticos, no se van a añadir mas, no tendriamos problema con eso.
+
+En caso de un escenario real habria que ver si realmente compensa, ya que son tablas propensas a muchos cambios habituales, especialemente la de los asistentes.
+
+```SQL
+CREATE INDEX numEntrada ON asistente;
+
+CREATE INDEX nombre ON fan;
+```
+
+
 ## Scripts
----
+
 hemos generado tambien algunos scripts para hacer algunas funciones.
 
 El primero es un script que sacaria por consola una lista de cada uno de los donantes.
