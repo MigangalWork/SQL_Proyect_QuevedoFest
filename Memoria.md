@@ -405,7 +405,7 @@ Podria usarse para poder poner publicidad de ese patrocinador en el escenario en
 
 ## Vistas
 ---
-Las vistas son utiles usadas para consultas frecuentes, ya que nos ahorran tiempo al hacer estas consultas.
+Las vistas son utiles usadas para consultas frecuentes, ya que nos ahorran tiempo al escribir estas consultas.
 
 Debido a esto aqui proponemos algunas vistas que consideramos utiles
 
@@ -524,4 +524,68 @@ END;
 
 language plpgsql;
 
+```
+Hemos creado tambien un Script para hacer un sorteo entre los fans de un grupo que hayan aportado mas que cierta cantidad de donaciones.
+
+El premio sera que recibira todas las donaciones de los concursantes y la suya propia de vuelta, por lo que considerares que todas esas donaciones son 0 para el grupo.
+
+```SQL
+CREATE or replace FUNCTION Sorteo(_grupo integer, _dinero integer)
+   RETURNS VARCHAR
+   
+   AS $$
+
+declare 
+    v_distancia integer;
+    v_distancia_anterior integer;
+    ganador VARCHAR;
+    num_participantes integer;
+    numGanador integer;
+    num integer;
+   
+  
+	_participantes CURSOR(_dinero integer, _grupo integer)
+		for SELECT nombre from fan where grupo = _grupo AND donacion > _dinero;
+         
+
+  
+
+   
+
+BEGIN
+
+   SELECT count(*) INTO num_participantes from fan where grupo = _grupo AND donacion > _dinero;
+   
+   v_distancia_anterior := num_participantes;
+
+   SELECT FLOOR(RANDOM()*num_participantes) INTO numGanador;
+
+   FOR concursante IN _participantes(_dinero, _grupo) LOOP
+
+      SELECT FLOOR(RANDOM()*num_participantes) INTO num;
+
+      v_distancia := abs(num - numGanador);
+
+      IF (v_distancia < v_distancia_anterior) THEN ganador := concursante; END IF;
+
+      v_distancia_anterior := v_distancia;
+
+      UPDATE fan
+        SET donacion = 0
+        WHERE CURRENT OF _participantes;
+
+
+
+   END LOOP;
+
+  
+   RETURN ganador;
+
+   
+
+END;
+
+ $$
+
+language plpgsql;
 ```
