@@ -126,7 +126,7 @@ CONSTRAINT escenario_estilo_fk FOREIGN KEY (escenario) REFERENCES escenario(nomb
 CREATE TABLE asistente
 (num_entrada INT CONSTRAINT entrada_pk PRIMARY KEY ,
 nombre VARCHAR(40) NOT NULL,
-butaca VARCHAR(40) UNIQUE,
+butaca VARCHAR(40),
 actuacion INT,
 
 CONSTRAINT asistente_grupo_fk FOREIGN KEY (actuacion) REFERENCES actuacion(id_actuacion)
@@ -270,7 +270,7 @@ estilos = yaml.safe_load(open('estilos.yaml', 'r'))
 
 for id_grupo, nombre in enumerate(grupos):
     fecha = (first_date_grupo + datetime.timedelta(days=random.randint(0, max_days_grupo))).strftime('%Y-%m-%d')
-    consultas += f"INSERT INTO grupo (id_grupo,nombre,fundacion)\nVALUES('{id_grupo}','{nombre}','{fecha}');\n"
+    consultas += f"INSERT INTO grupo (id_grupo,nombre,experiencia)\nVALUES({id_grupo},'{nombre}','{fecha}');\n"
 
 
 for nombre, aforo in escenarios.items():
@@ -422,14 +422,15 @@ Dado que el principal uso de secuencias es la introduccion de datos y nosotros u
 Aun asi, a modo de ejemplo creamos una,
 
 ```SQL
-
+CREATE SEQUENCE secuencia INCREMENT 1 START 0;
 ```
+Esta secuencia iria aumentando de 1 en 1 desde 0.
 
 ## Indices
 
 Los indices son utiles para consultas habituales sobre tablas con muchos datos. Aun que no es conveninte usarlos sobre tablas que tengan muchos cambios en sus datos habitualmente.
 
-Hemos decidido hacer un indice para las siguientes columnas de las siguientes tablasn
+Hemos decidido hacer un indice para las siguientes columnas de las siguientes tablas
 
     numEntrada de asistente
 
@@ -458,8 +459,6 @@ CREATE or replace FUNCTION donaciones(_grupo integer)
    RETURN text AS $$
 declare 
     donado int;
-  
-
 
 	_donacion CURSOR(_grupo integer) 
 		 for SELECT donacion
@@ -545,9 +544,50 @@ SELECT aforo INTO v_aforo FROM escenario WHERE nombre = _escenario;
 
    END LOOP;
   
-   CLOSE _actuaciones;
+   CLOSE _actuaciones 
 
+END;
+
+ $$
+
+language plpgsql;
+
+```
+
+Crearemos tambien un Script que devuelva true o false dependiendo de si el aforo de una actuacion esta lleno o no.
+
+```SQL
+
+CREATE or replace FUNCTION aforo_lleno(_actuacion INTEGER)
+   RETURNS BOOLEAN
    
+   AS $$
+
+declare 
+    v_asistentes INTEGER;
+    v_aforo escenario.aforo%type;
+    _escenario escenario.nombre%type;
+          
+BEGIN
+
+SELECT escenario.nombre INTO _escenario FROM escenario JOIN actuacion ON escenario.nombre = actuacion.escenario WHERE actuacion.id_actuacion = _actuacion;
+
+SELECT aforo INTO v_aforo FROM escenario WHERE nombre = _escenario;
+
+SELECT count(asistente.*) INTO v_asistentes
+		FROM actuacion
+         JOIN asistente ON actuacion.id_actuacion = asistente.actuacion
+         WHERE actuacion.escenario LIKE _escenario AND actuacion.id_actuacion = _actuacion;
+
+      IF (v_asistentes >= v_aforo) then
+         
+         RETURN true;
+      
+      ELSE 
+      
+        RETURN false;
+   
+      END IF;
 
 END;
 
@@ -576,12 +616,10 @@ declare
    
   
 	_participantes CURSOR(_dinero integer, _grupo integer)
-		for SELECT nombre from fan where grupo = _grupo AND donacion > _dinero;
-         
-
-  
-
-   
+		for SELECT nombre from fan where grupo = _grupo AND donacion > _dinero; 
+        
+        --Al haber creado un indice previamente aqui lo estariamos usando
+          
 
 BEGIN
 
@@ -605,14 +643,10 @@ BEGIN
         SET donacion = 0
         WHERE CURRENT OF _participantes;
 
-
-
    END LOOP;
 
-  
    RETURN ganador;
 
-   
 
 END;
 
@@ -620,3 +654,53 @@ END;
 
 language plpgsql;
 ```
+
+## Triggers
+
+Crearemos tambien un trigger para cuando se introduzca un nuevo asistente a un evento.
+
+Este trigger llamara a una funcion que llamara a un Script que hicimos previamente.
+
+Su funcion sera comprobar si se ha superado el aforo, en caso de que si eliminara al nuevo asitente de la base de datos.
+
+
+Primero creariamos una funcion para el trigger,
+
+```SQL
+CREATE or replace FUNCTION trigger_nuevo_asistente() 
+
+RETURNS TRIGGER 
+
+LANGUAGE plpgsql 
+
+AS
+ $$
+ DECLARE
+
+   lleno BOOLEAN;
+
+ BEGIN
+
+ SELECT aforo_lleno(NEW.actuacion) INTO lleno;
+
+ IF (lleno) THEN
+    DELETE FROM asistente WHERE numEntrada = NEW.numEntrada;
+ END IF;
+    RETURN NEW;
+ END;
+ 
+ $$;
+```
+Posteriormente el propio trigger que llamaria a la funcion previamente creada,
+
+```SQL
+CREATE TRIGGER trigger_asistente AFTER INSERT ON asistente 
+
+EXECUTE FUNCTION trigger_nuevo_asistente();
+```
+
+## Conclusiones
+
+Con esto concluimos el proyecto de esta base de datos.
+
+Hemos generado una base de datos suficiente para un festival, tanto con suficientes consultas sencillas para obtener datos importantes como funciones para consultas mas complejas para datos o acciones mas especificas.

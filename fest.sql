@@ -3,29 +3,29 @@ CREATE DATABASE fest;
 --Crear tablas
 
 CREATE TABLE estilo
-(nombre VARCHAR CONSTRAINT estilo_pk PRIMARY KEY,
-epoca VARCHAR NOT NULL
+(nombre VARCHAR(40) CONSTRAINT estilo_pk PRIMARY KEY,
+epoca VARCHAR(40) NOT NULL
 );
 
 CREATE TABLE grupo
 (id_grupo INT CONSTRAINT grupo_pk PRIMARY KEY,
-nombre VARCHAR UNIQUE NOT NULL,
+nombre VARCHAR(40) UNIQUE NOT NULL,
 experiencia DATE);
 
 CREATE TABLE fan
 (id_fan INT CONSTRAINT fan_pk PRIMARY KEY ,
-nombre VARCHAR NOT NULL,
+nombre VARCHAR(40) NOT NULL,
 donacion INT,
 grupo INT,
 CONSTRAINT fan_grupo_fk FOREIGN KEY (grupo) REFERENCES grupo(id_grupo)
 );
 
 CREATE TABLE artista
-(dni VARCHAR CONSTRAINT artista_pk PRIMARY KEY ,
-nombre VARCHAR NOT NULL,
-apellido VARCHAR NOT NULL,
+(dni VARCHAR(40) CONSTRAINT artista_pk PRIMARY KEY ,
+nombre VARCHAR(40) NOT NULL,
+apellido VARCHAR(40) NOT NULL,
 grupo INT,
-estilo VARCHAR,
+estilo VARCHAR(40),
 
 CONSTRAINT artista_grupo_fk FOREIGN KEY (grupo) REFERENCES grupo(id_grupo),
 CONSTRAINT artista_estilo_fk FOREIGN KEY (estilo) REFERENCES estilo(nombre)
@@ -39,10 +39,10 @@ aforo INT
 
 CREATE TABLE actuacion
 (id_actuacion INT CONSTRAINT actuacion_pk PRIMARY KEY ,
-nombre VARCHAR NOT NULL,
-fecha DATE NOT NULL,
+nombre VARCHAR(40) NOT NULL,
+fecha DATETIME NOT NULL,
 grupo INT,
-escenario VARCHAR,
+escenario VARCHAR(40),
 
 CONSTRAINT actuacion_grupo_fk FOREIGN KEY (grupo) REFERENCES grupo(id_grupo),
 CONSTRAINT escenario_estilo_fk FOREIGN KEY (escenario) REFERENCES escenario(nombre)
@@ -51,23 +51,23 @@ CONSTRAINT escenario_estilo_fk FOREIGN KEY (escenario) REFERENCES escenario(nomb
 
 CREATE TABLE asistente
 (num_entrada INT CONSTRAINT entrada_pk PRIMARY KEY ,
-nombre VARCHAR NOT NULL,
-butaca VARCHAR UNIQUE,
+nombre VARCHAR(40) NOT NULL,
+butaca VARCHAR(40),
 actuacion INT,
 
 CONSTRAINT asistente_grupo_fk FOREIGN KEY (actuacion) REFERENCES actuacion(id_actuacion)
 );
 
 CREATE TABLE patrocinador
-(id_patrocinador VARCHAR CONSTRAINT patrocinador_pk PRIMARY KEY,
-nombre VARCHAR NOT NULL
+(id_patrocinador VARCHAR(40) CONSTRAINT patrocinador_pk PRIMARY KEY,
+nombre VARCHAR(40) NOT NULL
 );
 
 CREATE TABLE patrocinador_grupo
 (
 fecha_contrato DATE NOT NULL,
 grupo INT CONSTRAINT patgrup_pk PRIMARY KEY,
-patrocinador VARCHAR UNIQUE NOT NULL,
+patrocinador VARCHAR(40) UNIQUE NOT NULL,
 
 CONSTRAINT patgrup_grupo_fk FOREIGN KEY (grupo) REFERENCES grupo(id_grupo),
 CONSTRAINT patgrup_patrocinador_fk FOREIGN KEY (patrocinador) REFERENCES patrocinador(id_patrocinador)
@@ -348,3 +348,69 @@ END;
 
 language plpgsql;
 
+CREATE or replace FUNCTION aforo_lleno(_actuacion INTEGER)
+   RETURNS BOOLEAN
+   
+   AS $$
+
+declare 
+    v_asistentes INTEGER;
+    v_aforo escenario.aforo%type;
+    _escenario escenario.nombre%type;
+          
+BEGIN
+
+SELECT escenario.nombre INTO _escenario FROM escenario JOIN actuacion ON escenario.nombre = actuacion.escenario WHERE actuacion.id_actuacion = _actuacion;
+
+SELECT aforo INTO v_aforo FROM escenario WHERE nombre = _escenario;
+
+SELECT count(asistente.*) INTO v_asistentes
+		FROM actuacion
+         JOIN asistente ON actuacion.id_actuacion = asistente.actuacion
+         WHERE actuacion.escenario LIKE _escenario AND actuacion.id_actuacion = _actuacion;
+
+      IF (v_asistentes >= v_aforo) then
+         
+         RETURN true;
+      
+      ELSE 
+      
+        RETURN false;
+   
+      END IF;
+
+END;
+
+ $$
+
+language plpgsql;
+
+--Triggers
+
+CREATE or replace FUNCTION trigger_nuevo_asistente() 
+
+RETURNS TRIGGER 
+
+LANGUAGE plpgsql 
+
+AS
+ $$
+ DECLARE
+
+   lleno BOOLEAN;
+
+ BEGIN
+
+ SELECT aforo_lleno(NEW.actuacion) INTO lleno;
+
+ IF (lleno) THEN
+    DELETE FROM asistente WHERE numEntrada = NEW.numEntrada;
+ END IF;
+    RETURN NEW;
+ END;
+ 
+ $$;
+
+CREATE TRIGGER trigger_asistente AFTER INSERT ON asistente 
+
+EXECUTE FUNCTION trigger_nuevo_asistente();
