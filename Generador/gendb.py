@@ -29,7 +29,7 @@ estilos = yaml.safe_load(open('estilos.yaml', 'r'))
 
 for id_grupo, nombre in enumerate(grupos):
     fecha = (first_date_grupo + datetime.timedelta(days=random.randint(0, max_days_grupo))).strftime('%Y-%m-%d')
-    consultas += f"INSERT INTO grupo (id_grupo,nombre,fundacion)\nVALUES('{id_grupo}','{nombre}','{fecha}');\n"
+    consultas += f"INSERT INTO grupo (id_grupo,nombre,experiencia)\nVALUES({id_grupo},'{nombre}','{fecha}');\n"
 
 
 for nombre, aforo in escenarios.items():
