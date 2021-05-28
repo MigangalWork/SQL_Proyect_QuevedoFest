@@ -403,6 +403,25 @@ JOIN escenario ON actuacion.escenario = escenario.nombre;
 ```
 Podria usarse para poder poner publicidad de ese patrocinador en el escenario en el que toque su grupo.
 
+Tambien una consulta util seria la lista de estilos por fans.
+
+```SQL
+SELECT estilo.nombre, count(fan.*) FROM fan 
+JOIN grupo ON fan.grupo = grupo.id_grupo 
+JOIN artista ON grupo.id_grupo = artista.grupo 
+JOIN estilo ON artista.estilo = estilo.nombre 
+GROUP BY estilo.nombre ORDER BY count(fan.*);
+```
+Por ultimo, podriamos relacionar la epoca de cada actuacion y su escenario para poder decorar el escenario acorde a esa actuacion.
+
+```SQL
+SELECT escenario.nombre, estilo.epoca, actuacion.fecha FROM escenario 
+JOIN actuacion ON escenario.nombre = actuacion.escenario 
+JOIN grupo ON actuacion.grupo = grupo.id_grupo 
+JOIN artista ON grupo.id_grupo = artista.grupo 
+JOIN estilo ON artista.estilo = estilo.nombre;
+```
+
 ## Vistas
 
 Las vistas son utiles usadas para consultas frecuentes, ya que nos ahorran tiempo al escribir estas consultas.

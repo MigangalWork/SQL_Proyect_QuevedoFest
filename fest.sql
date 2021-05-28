@@ -171,6 +171,18 @@ JOIN grupo ON patrocinador_grupo.grupo = grupo.id_grupo
 JOIN actuacion ON grupo.id_grupo = actuacion.grupo
 JOIN escenario ON actuacion.escenario = escenario.nombre;
 
+SELECT estilo.nombre, count(fan.*) FROM fan 
+JOIN grupo ON fan.grupo = grupo.id_grupo 
+JOIN artista ON grupo.id_grupo = artista.grupo 
+JOIN estilo ON artista.estilo = estilo.nombre 
+GROUP BY estilo.nombre ORDER BY count(fan.*);
+
+SELECT escenario.nombre, estilo.epoca, actuacion.fecha FROM escenario 
+JOIN actuacion ON escenario.nombre = actuacion.escenario 
+JOIN grupo ON actuacion.grupo = grupo.id_grupo 
+JOIN artista ON grupo.id_grupo = artista.grupo 
+JOIN estilo ON artista.estilo = estilo.nombre;
+
 --Vistas
 
 CREATE or replace VIEW artistas AS 
