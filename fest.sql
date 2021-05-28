@@ -321,8 +321,7 @@ declare
 	_participantes CURSOR(_dinero integer, _grupo integer)
 		for SELECT nombre from fan where grupo = _grupo AND donacion > _dinero;
 
-      -- Podriamos usar aqui uno de los indices que hemos creado previamente para haciendo:
-      -- for EXPLAIN SELECT nombre from fan where grupo = _grupo AND donacion > _dinero;
+   
          
 
   
