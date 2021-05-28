@@ -415,6 +415,22 @@ CREATE or replace VIEW artistas AS
    SELECT grupo.nombre, artista.nombre FROM grupo 
    JOIN artista ON grupo.id_grupo = artista.grupo ;
 ```
+Creamos tambien una vista que nos muestra cada grupo con las fecha en la que actuan.
+
+```SQL
+CREATE or replace VIEW calendarioGrupo AS 
+   SELECT grupo.nombre, actuacion.fecha FROM grupo 
+   JOIN actuacion ON grupo.id_grupo=actuacion.grupo ORDER BY grupo.nombre;
+```
+Y una ultima vista, bastante util para hacer un calendario junto a la anterior, donde ponemos cuanto conciertos haya cada dia.
+
+```SQL
+CREATE or replace VIEW calendarioFechas AS 
+   SELECT DATE_PART('day', actuacion.fecha) || '-' || DATE_PART('month', actuacion.fecha) || '-' || DATE_PART('year', actuacion.fecha), count(grupo.*) FROM grupo 
+   JOIN actuacion ON grupo.id_grupo=actuacion.grupo 
+   GROUP BY DATE_PART('day', actuacion.fecha), DATE_PART('month', actuacion.fecha), DATE_PART('year', actuacion.fecha)
+   ORDER BY DATE_PART('day', actuacion.fecha);
+   ```
 ## Secuncias
 
 Dado que el principal uso de secuencias es la introduccion de datos y nosotros usamos un archivo externo para la creacion de estos, no vemos mucha utilidad en crear secuencias.
